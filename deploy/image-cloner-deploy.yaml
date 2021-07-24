@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: image-cloner
+  name: image-cloner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: image-cloner
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: image-cloner
+    spec:
+      containers:
+      - name: image-cloner
+        image: image-cloner:v1
+        command: ["/image-cloner"]
+        args:
+          - "--tls-cert-file=/tls/tls.crt"
+          - "--tls-private-key-file=/tls/tls.key"
+        ports:
+        - containerPort: 443
+        volumeMounts:
+        - name: tls
+          mountPath: "/tls"
+          readOnly: true
+      volumes:
+        - name: tls
+          secret:
+            secretName: image-cloner-tls
+                
+
