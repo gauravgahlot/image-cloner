@@ -1,0 +1,9 @@
+.vscode/
+keys/
+
+tls/*.pem
+tls/*.csr
+
+deploy/image-cloner-tls.yaml
+deploy/image-cloner-webhook.yaml
+
