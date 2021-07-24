@@ -25,7 +25,7 @@ cfssl gencert \
   ca-csr.json | cfssljson -bare image-cloner
 
 echo ""
-echo "[info] Creating a secret for image cloner"
+echo "[info] Creating a TLS secret definition for image cloner"
 cat <<EOF > ../deploy/image-cloner-tls.yaml
 apiVersion: v1
 kind: Secret

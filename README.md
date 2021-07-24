@@ -10,11 +10,10 @@
 ## make
 
 The repository uses a Makefile for different operations.
-Here are available targets:
+Here are the available targets:
 
 ```sh
 $ make
-
 build    build Docker image for image cloner
 deploy   register and deploy webhook in K8s cluster
 gen      generate certificates, K8s TLS secret, and webhook configuration
@@ -34,9 +33,10 @@ For generating the TLS Certificates we have the [gencerts.sh][1] script. The
 script:
 - generates the certificates.
 - creates `deploy/image-cloner-tls.yaml` definition for TLS secret with server
-certificate and private key.
+certificate and private key. ([ref][2])
 - creates `deploy/image-cloner-webhook.yaml` definition for webhook
-configuration by updating the `tls/webhook-template.yaml` with CA bundle.
+configuration by updating the `tls/webhook-template.yaml` with CA bundle. 
+([ref][3])
 
 Let's generate the certificates using the command:
 
@@ -93,14 +93,14 @@ make build
 ```
 
 - You can tag and push the image to a registry of your choice. 
-- If you are using Kind, you can load this using the command:
+- If you are using Kind, you can load this image using the command:
 
 ```sh
 kind load docker-image image-cloner:v1
 ```
 
 Note: If you have changed the Docker image name or tag, don't forget to update
-the same in the [deployment][2] specification.
+the same in the [deployment][4] specification.
 
 ## Deploy Image Cloner
 
@@ -109,7 +109,6 @@ deploy image cloner using the command:
 
 ```sh
 $ make deploy
-
 kubectl apply -f deploy/image-cloner-tls.yaml \
   -f deploy/image-cloner-svc.yaml \
   -f deploy/image-cloner-deploy.yaml \
@@ -136,6 +135,8 @@ curl -k https://localhost:8443/readz
 If you receive `OK` in response, then the server is up and running.
 
 [1]: tls/gencerts.sh
-[2]: deploy/image-cloner-deploy.yaml
+[2]: tls/gencerts.sh#L28
+[3]: tls/gencerts.sh#L48
+[4]: deploy/image-cloner-deploy.yaml#L21
 
 
