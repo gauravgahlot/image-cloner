@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 
 	klog "k8s.io/klog/v2"
+
+	"github.com/gauravgahlot/image-cloner/internal/server"
 )
 
 var (
@@ -28,41 +28,20 @@ func main() {
 	klog.InitFlags(nil)
 	flag.Parse()
 
-	c := config{
-		certFile: certFile,
-		keyFile:  keyFile,
+	c := server.Config{
+		CertFile: certFile,
+		KeyFile:  keyFile,
+		Addr:     fmt.Sprintf(":%d", port),
 	}
 
-	server := http.Server{
-		Addr:      fmt.Sprintf(":%d", port),
-		TLSConfig: configTLS(c),
-	}
-
-	registerHandlers()
-
-	klog.Info("server listening at: ", port)
-	err := server.ListenAndServeTLS("", "")
+	server, err := server.Setup(c)
 	if err != nil {
-		klog.Fatal(err)
-	}
-}
-
-func registerHandlers() {
-	http.HandleFunc("/clone-image", cloneImage)
-	http.HandleFunc("/readyz", func(w http.ResponseWriter, req *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
-}
-
-func cloneImage(w http.ResponseWriter, req *http.Request) {
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		klog.Fatal(err)
+		klog.Fatalf("[error]: %v", err)
 	}
 
-	ioutil.WriteFile("/tmp/request", body, 0644)
+	klog.Info("[info] server listening at: ", c.Addr)
+	err = server.Serve()
 	if err != nil {
-		klog.Fatal(err)
+		klog.Fatalf("[error]: %v", err)
 	}
 }
