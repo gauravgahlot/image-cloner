@@ -5,7 +5,7 @@
 - make
 - docker
 - kubectl
-- kubernetes cluster
+- minikube
 
 ## make
 
@@ -19,7 +19,20 @@ deploy   register and deploy webhook in K8s cluster
 gen      generate certificates, K8s TLS secret, and webhook configuration
 help     print this help
 lint     run lint and go mod tidy
-test     run tests
+```
+
+## Docker Registry Authentication
+
+For image cloner to be able to push to a Docker registry, it requires user
+credentials for authentication. These credentials are made available to the
+application by mounting `registry-auth` secret as a volume. 
+
+You can create create the `registry-auth` secret using below command:
+
+```sh
+kubectl create secret generic registry-auth \
+  --from-literal=username=<REGISTRY-USERNAME> \
+  --from-literal=password=<REGISTRY-PASSWORD>
 ```
 
 ## TLS Certificates
@@ -92,15 +105,9 @@ docker run --rm -it -v /home/gg/go/src/github.com/gauravgahlot/image-cloner/tls:
 make build
 ```
 
-- You can tag and push the image to a registry of your choice. 
-- If you are using Kind, you can load this image using the command:
-
-```sh
-kind load docker-image image-cloner:v1
-```
-
-Note: If you have changed the Docker image name or tag, don't forget to update
-the same in the [deployment][4] specification.
+- The build creates the `image-cloner:v1` image.
+- You can now tag and push the image to a registry of your choice. 
+- You will also need to update the Docker image in the [deployment][4] file.
 
 ## Deploy Image Cloner
 

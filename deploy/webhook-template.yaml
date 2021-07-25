@@ -4,15 +4,16 @@ metadata:
   name: image-cloner
 webhooks:
   - name: image-cloner.default.svc.cluster.local
-    admissionReviewVersions: ["v1", "v1beta1"]
+    admissionReviewVersions: ["v1"]
     timeoutSeconds: 5
     failurePolicy: Fail
     sideEffects: None
+    reinvocationPolicy: IfNeeded
     rules:
       - operations: ["CREATE", "UPDATE"]
-        apiGroups: ["apps",  ""]
+        apiGroups: ["apps"]
         apiVersions: ["v1"]
-        resources: ["deployment", "daemonset", "pods"]
+        resources: ["deployments"]
         scope: "Namespaced"
     clientConfig:
       service:

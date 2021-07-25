@@ -12,7 +12,6 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: image-cloner
     spec:
@@ -29,9 +28,24 @@ spec:
         - name: tls
           mountPath: "/tls"
           readOnly: true
+        - name: auth
+          mountPath: "/auth"
+          readOnly: true
+        - name: docker-sock
+          readOnly: false
+          mountPath: /var/run/docker.sock
+        securityContext:
+          privileged: true
+          runAsUser: 0
       volumes:
         - name: tls
           secret:
             secretName: image-cloner-tls
-                
+        - name: auth
+          secret:
+            secretName: registry-auth
+        - name: docker-sock
+          hostPath:
+            path: "/var/run/docker.sock"
+            type: Socket
 
