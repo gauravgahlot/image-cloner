@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    image-cloner: enabled
+    kubernetes.io/metadata.name: default
+  name: default

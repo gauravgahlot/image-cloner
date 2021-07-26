@@ -9,6 +9,9 @@ webhooks:
     failurePolicy: Fail
     sideEffects: None
     reinvocationPolicy: IfNeeded
+    namespaceSelector:
+      matchLabels:
+        image-cloner: enabled
     rules:
       - operations: ["CREATE", "UPDATE"]
         apiGroups: ["apps"]

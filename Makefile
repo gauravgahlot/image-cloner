@@ -10,6 +10,7 @@ build: ## build Docker image for image cloner
 	docker build -t image-cloner:v1 .
 
 deploy:	## register and deploy webhook in K8s cluster
+	kubectl apply -f deploy/label-image-cloner-enabled.yaml
 	kubectl apply -f deploy/image-cloner-tls.yaml
 	kubectl apply -f deploy/image-cloner-svc.yaml
 	kubectl apply -f deploy/image-cloner-deploy.yaml

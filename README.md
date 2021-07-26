@@ -2,10 +2,10 @@
 
 ## Prerequisites
 
-- make
-- docker
-- kubectl
-- minikube
+- [make][5]
+- [docker][6]
+- [kubectl][7]
+- [minikube][8]
 
 ## make
 
@@ -141,9 +141,29 @@ curl -k https://localhost:8443/readz
 
 If you receive `OK` in response, then the server is up and running.
 
+## Troubleshooting
+
+- Q: Why doesn't solution work on Kind?
+
+The solution uses Docker SDK (Go) to pull/tag/push a Docker image. For that to work, we mount 
+`/var/run/docker.sock` as a volume to the image cloner. A Kind cluster _does not_ use docker socket.
+Instead, it uses the containerd socket available at `/var/run/containerd/containerd.sock`. Minikube,
+on the other hand, uses the docker socket and that's why it has beed added as a prerequisite.
+
+- Q: Why the image cloner pod fails to run?
+
+Please ensure that you deploy image cloner _before_ you register the admission webhook. If
+the webhook is registered first, then when you deploy image cloner the webhook will send a request
+to `image-cloner` service at `/clone-image`. Since image cloner is not yet deployed, there is
+no server to respond to the request and consequently the webhook will timeout. As a result,
+the deployment will fail.
+
 [1]: tls/gencerts.sh
 [2]: tls/gencerts.sh#L28
 [3]: tls/gencerts.sh#L48
 [4]: deploy/image-cloner-deploy.yaml#L21
-
+[5]: https://www.gnu.org/software/make/
+[6]: https://docs.docker.com/get-docker/
+[7]: https://kubernetes.io/docs/tasks/tools/#kubectl
+[8]: https://minikube.sigs.k8s.io/docs/start/
 
