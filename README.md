@@ -1,5 +1,26 @@
 # Image Cloner Admission Webhook
 
+The image cloner admission webhook provides safety against the risk of public container images disappearing from the registry and breaking out deployments, while we use them.
+
+The webhook watches the `depoloyments`, and `daemonsets` and _caches_ the images by re-uploading to our own registry repository (backup) and reconfiguring the applications to use these copies. It does so before the application specifications are persisted by the K8s API server.
+
+
+Table of Contents
+=================
+
+   * [Demo](#demo)
+   * [Prerequisites](#prerequisites)
+   * [make](#make)
+   * [Docker Registry Authentication](#docker-registry-authentication)
+   * [TLS Certificates](#tls-certificates)
+   * [Trying out the Webhook](#trying-out-the-webhook)
+     * [Build](#build)
+     * [Deploy](#deploy)
+     * [Test](#test)
+   * [make test](#make-test)
+   * [Troubleshooting](#troubleshooting)
+
+
 ## Demo
 
 <br />Here is a demo of the image cloner in action:
@@ -109,7 +130,9 @@ docker run --rm -it -v /home/gg/go/src/github.com/gauravgahlot/image-cloner/tls:
 [done]
 ```
 
-## Docker Image for Image Cloner
+## Trying out the Webhook
+
+### Build
 
 - Build the Docker image for `image-cloner` using the command:
 
@@ -121,7 +144,7 @@ make build
 - You can now tag and push the image to a registry of your choice. 
 - You will also need to update the Docker image in the [deployment][4] file.
 
-## Deploy Image Cloner
+### Deploy
 
 Once the image has been pushed to a registry or loaded into Kind, we can then
 deploy image cloner using the command:
@@ -155,10 +178,9 @@ curl -k https://localhost:8443/readz
 
 If you receive `OK` in response, then the server is up and running.
 
-## Testing the Webhook
+### Test
 
-- First, deploy the image cloner webhook using `make deploy` command.
-- As the cloner start, it reads the backup `REGISTRY` and registry username from
+- As the image cloner starts, it reads the backup `REGISTRY` and registry username from
 the environment variable and the `registry-auth` secret respectively.
 The cloner use these details to generate an appropriate name for the pod image.
 - In one terminal, watch the logs of the image cloner pod.
