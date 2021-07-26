@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 
 	v1 "k8s.io/api/admission/v1"
@@ -83,14 +82,6 @@ func validateReviewRequest(body []byte) (v1.AdmissionReview, error) {
 	}
 
 	return reviewReq, nil
-}
-
-func newImage(src, registry, user string) string {
-	img := strings.Split(src, "/")
-	if registry == "" {
-		return strings.Join([]string{user, img[len(img)-1]}, "/")
-	}
-	return strings.Join([]string{registry, user, img[len(img)-1]}, "/")
 }
 
 func writeAdmissionReviewResponse(w http.ResponseWriter, r reviewResponse) {

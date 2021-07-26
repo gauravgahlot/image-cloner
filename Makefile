@@ -18,7 +18,7 @@ deploy:	## register and deploy webhook in K8s cluster
 
 test: ## run tests
 	go clean -testcache
-	go test ./... -v
+	go test ./... -coverprofile coverage.out && go tool cover -func coverage.out
 
 lint: ## run lint and go mod tidy
 	golint ./...

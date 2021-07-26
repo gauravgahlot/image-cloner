@@ -19,6 +19,7 @@ deploy   register and deploy webhook in K8s cluster
 gen      generate certificates, K8s TLS secret, and webhook configuration
 help     print this help
 lint     run lint and go mod tidy
+test     run tests
 ```
 
 ## Docker Registry Authentication
@@ -140,6 +141,38 @@ curl -k https://localhost:8443/readz
 ```
 
 If you receive `OK` in response, then the server is up and running.
+
+## make test
+
+There are a few unit tests available to test the solution. The current status is:
+
+```sh
+$ make test
+go clean -testcache
+go test ./... -coverprofile coverage.out && go tool cover -func coverage.out
+?   	github.com/gauravgahlot/image-cloner	[no test files]
+?   	github.com/gauravgahlot/image-cloner/internal/docker	[no test files]
+ok  	github.com/gauravgahlot/image-cloner/internal/server	0.008s	coverage: 74.1% of statements
+github.com/gauravgahlot/image-cloner/internal/server/clone.go:26:	cloneImage			69.0%
+github.com/gauravgahlot/image-cloner/internal/server/clone.go:74:	validateReviewRequest		71.4%
+github.com/gauravgahlot/image-cloner/internal/server/clone.go:87:	writeAdmissionReviewResponse	80.0%
+github.com/gauravgahlot/image-cloner/internal/server/config.go:16:	configTLS			0.0%
+github.com/gauravgahlot/image-cloner/internal/server/mock.go:7:		withRegistry			100.0%
+github.com/gauravgahlot/image-cloner/internal/server/mock.go:11:	withRegistryUser		100.0%
+github.com/gauravgahlot/image-cloner/internal/server/mock.go:21:	ImagePull			100.0%
+github.com/gauravgahlot/image-cloner/internal/server/mock.go:24:	ImagePush			100.0%
+github.com/gauravgahlot/image-cloner/internal/server/mock.go:28:	ImageTag			100.0%
+github.com/gauravgahlot/image-cloner/internal/server/readyz.go:9:	readyz				75.0%
+github.com/gauravgahlot/image-cloner/internal/server/response.go:47:	createResponse			90.0%
+github.com/gauravgahlot/image-cloner/internal/server/response.go:70:	tryCreatePatches		100.0%
+github.com/gauravgahlot/image-cloner/internal/server/response.go:103:	isUsingBackupRegistry		100.0%
+github.com/gauravgahlot/image-cloner/internal/server/response.go:110:	newImage			100.0%
+github.com/gauravgahlot/image-cloner/internal/server/response.go:118:	createErrorResponse		100.0%
+github.com/gauravgahlot/image-cloner/internal/server/server.go:24:	Setup				0.0%
+github.com/gauravgahlot/image-cloner/internal/server/server.go:46:	Serve				0.0%
+total:									(statements)			74.1%
+
+```
 
 ## Troubleshooting
 

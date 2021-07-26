@@ -107,6 +107,14 @@ func (s *server) isUsingBackupRegistry(src string) bool {
 	return strings.HasPrefix(src, s.registryUser)
 }
 
+func newImage(src, registry, user string) string {
+	img := strings.Split(src, "/")
+	if registry == "" {
+		return strings.Join([]string{user, img[len(img)-1]}, "/")
+	}
+	return strings.Join([]string{registry, user, img[len(img)-1]}, "/")
+}
+
 func createErrorResponse(uid types.UID, code int32, reason metav1.StatusReason, msg string) reviewResponse {
 	return reviewResponse{
 		uid:     uid,
