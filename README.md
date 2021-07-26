@@ -1,11 +1,18 @@
 # Image Cloner Admission Webhook
 
+## Demo
+
+<br />Here is a demo of the image cloner in action:
+
+![Image Cloner Mutating Admission Webhook](https://github.com/gauravgahlot/image-cloner/blob/master/media/image-cloner.gif)
+
 ## Prerequisites
 
 - [make][5]
 - [docker][6]
 - [kubectl][7]
 - [minikube][8]
+
 
 ## make
 
@@ -35,6 +42,10 @@ kubectl create secret generic registry-auth \
   --from-literal=username=<REGISTRY-USERNAME> \
   --from-literal=password=<REGISTRY-PASSWORD>
 ```
+
+- If you using any registry other than Docker Hub (say `quay.io`) then you must
+set the `REGISTRY` environment variable in the [deployment][9] accordingly.
+- However, if you are using Docker Hub, you don't need to set the value.
 
 ## TLS Certificates
 
@@ -117,13 +128,15 @@ deploy image cloner using the command:
 
 ```sh
 $ make deploy
-kubectl apply -f deploy/image-cloner-tls.yaml \
-  -f deploy/image-cloner-svc.yaml \
-  -f deploy/image-cloner-deploy.yaml \
-  -f deploy/image-cloner-webhook.yaml
+kubectl apply -f deploy/label-image-cloner-enabled.yaml
+namespace/default configured
+kubectl apply -f deploy/image-cloner-tls.yaml
 secret/image-cloner-tls created
+kubectl apply -f deploy/image-cloner-svc.yaml
 service/image-cloner created
+kubectl apply -f deploy/image-cloner-deploy.yaml
 deployment.apps/image-cloner created
+kubectl apply -f deploy/image-cloner-webhook.yaml
 mutatingwebhookconfiguration.admissionregistration.k8s.io/image-cloner created
 ```
 
@@ -141,6 +154,62 @@ curl -k https://localhost:8443/readz
 ```
 
 If you receive `OK` in response, then the server is up and running.
+
+## Testing the Webhook
+
+- First, deploy the image cloner webhook using `make deploy` command.
+- As the cloner start, it reads the backup `REGISTRY` and registry username from
+the environment variable and the `registry-auth` secret respectively.
+The cloner use these details to generate an appropriate name for the pod image.
+- In one terminal, watch the logs of the image cloner pod.
+- Now, create a deployment in `default` namespace using `alpine:3.12` image:
+
+```sh
+kubectl create deploy alpine --image=alpine:3.12 --replicas=1 -- sleed 1d
+```
+
+- Notice how the deployment is not immediately created.
+- In the logs you should see following messages (similar):
+
+```sh
+...
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 17:58:42.430533       1 main.go:42] [info] server listening at: :443
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:00.764796       1 clone.go:38] [info]: request received for kind=Deployment, operation=CREATE, name=alpine
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:07.402406       1 client.go:78] [info]: Pulling from library/alpine
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:13.738607       1 client.go:78] [info]: Pulling fs layer
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:15.071628       1 client.go:78] [info]: Downloading
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:15.330608       1 client.go:78] [info]: Verifying Checksum
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:15.330625       1 client.go:78] [info]: Download complete
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:15.330718       1 client.go:78] [info]: Extracting
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:15.426126       1 client.go:78] [info]: Pull complete
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:15.440070       1 client.go:78] [info]: Digest: sha256:87703314048c40236c6d674424159ee862e2b96ce1c37c62d877e21ed27a387e
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:15.444154       1 client.go:78] [info]: Status: Downloaded newer image for alpine:3.12
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:15.450767       1 client.go:54] [info]: 'alpine:3.12' successfully tagged as 'quickdevnotes/alpine:3.12'
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:15.451494       1 client.go:78] [info]: The push refers to repository [docker.io/quickdevnotes/alpine]
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:16.701360       1 client.go:78] [info]: Preparing
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:19.351601       1 client.go:78] [info]: Layer already exists
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:22.023309       1 client.go:78] [info]: 3.12: digest: sha256:a9c28c813336ece5bb98b36af5b66209ed777a394f4f856c6e62267790883820 size: 528
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:22.029238       1 clone.go:106] [info]: applying patch
+image-cloner-5bc5bbdd46-xkfv8 image-cloner I0726 18:00:22.029543       1 clone.go:118] [info]: writing admission review response
+...
+```
+
+- An admission review request was received for `kind=Deployment, operation=CREATE, name=alpine`.
+- The webhook notices that the image used is not from the backup registry.
+- It first pulls the source (original) Docker image.
+- Next, it generates an appropriate name for the image using the details read from `REGISTRY` and `registy-auth`.
+In the sample logs, it is `quickdevnotes/alpine:3.12`.
+- Note that if you are pushing to Docker Hub, you don't need to set the `REGISTRY` environment variable.
+- The image is now pushed and a `patch` with new image name is generated.
+- An admission review response is created with the `patch` and sent back to the K8s API server.
+Also, the webhook sets `"allowed" = true` in the response. It tells the API server that the
+webhook is done processing and has approved the request.
+- Based on the `allowed` flag, the API server forwards or rejects the request.
+- Now, check if the `alpine` deployment has been created with the new image name.
+- If so, the webhook is working!
+- Next, create another deployment using any image from the backup registry.
+- You will notice, that this time the webhook will not create a patch.
+This is because the deployment is already using an image from the backup registry.
 
 ## make test
 
@@ -176,12 +245,12 @@ total:									(statements)			74.1%
 
 ## Troubleshooting
 
-- Q: Why doesn't solution work on Kind?
+- Q: Why doesn't the solution work with Kind?
 
 The solution uses Docker SDK (Go) to pull/tag/push a Docker image. For that to work, we mount 
 `/var/run/docker.sock` as a volume to the image cloner. A Kind cluster _does not_ use docker socket.
 Instead, it uses the containerd socket available at `/var/run/containerd/containerd.sock`. Minikube,
-on the other hand, uses the docker socket and that's why it has beed added as a prerequisite.
+on the other hand, uses the docker socket and that's why it has been added as a prerequisite.
 
 - Q: Why the image cloner pod fails to run?
 
@@ -199,4 +268,4 @@ the deployment will fail.
 [6]: https://docs.docker.com/get-docker/
 [7]: https://kubernetes.io/docs/tasks/tools/#kubectl
 [8]: https://minikube.sigs.k8s.io/docs/start/
-
+[9]: deploy/image-cloner-deploy.yaml#L28

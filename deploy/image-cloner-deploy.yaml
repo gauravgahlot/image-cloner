@@ -24,6 +24,9 @@ spec:
           - "--tls-private-key-file=/tls/tls.key"
         ports:
         - containerPort: 443
+        env:
+        - name: REGISTRY
+          value: ""
         volumeMounts:
         - name: tls
           mountPath: "/tls"
