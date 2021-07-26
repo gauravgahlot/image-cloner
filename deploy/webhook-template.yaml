@@ -5,7 +5,7 @@ metadata:
 webhooks:
   - name: image-cloner.default.svc.cluster.local
     admissionReviewVersions: ["v1"]
-    timeoutSeconds: 5
+    timeoutSeconds: 30
     failurePolicy: Fail
     sideEffects: None
     reinvocationPolicy: IfNeeded
@@ -13,7 +13,7 @@ webhooks:
       - operations: ["CREATE", "UPDATE"]
         apiGroups: ["apps"]
         apiVersions: ["v1"]
-        resources: ["deployments"]
+        resources: ["deployments", "daemonsets"]
         scope: "Namespaced"
     clientConfig:
       service:
