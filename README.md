@@ -84,7 +84,10 @@ certificate and private key. ([ref][2])
 configuration by updating the `tls/webhook-template.yaml` with CA bundle. 
 ([ref][3])
 
-Let's generate the certificates using the command:
+Let's generate the certificates using the command `make gen`.
+
+<details>
+  <summary>Here is a sample command output. (click to expand)</summary>
 
 ```sh
 $ make gen
@@ -129,6 +132,7 @@ docker run --rm -it -v /home/gg/go/src/github.com/gauravgahlot/image-cloner/tls:
 [info] Generating and injecting the CA bundle into webhook configuation template.
 [done]
 ```
+</details>
 
 ## Trying out the Webhook
 
@@ -235,7 +239,10 @@ This is because the deployment is already using an image from the backup registr
 
 ## make test
 
-There are a few unit tests available to test the solution. The current status is:
+There are a few unit tests available to test the solution.
+
+<details>
+  <summary>The current test coverage is 74.1%.</summary>
 
 ```sh
 $ make test
@@ -262,8 +269,8 @@ github.com/gauravgahlot/image-cloner/internal/server/response.go:118:	createErro
 github.com/gauravgahlot/image-cloner/internal/server/server.go:24:	Setup				0.0%
 github.com/gauravgahlot/image-cloner/internal/server/server.go:46:	Serve				0.0%
 total:									(statements)			74.1%
-
 ```
+</details>
 
 ## Troubleshooting
 
